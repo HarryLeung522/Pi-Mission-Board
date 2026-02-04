@@ -3,97 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>派克公會任務區</title>
+    <title>派克公會任務看板</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --harry-color: #ef4444; --zoe-color: #10b981; --ian-color: #3b82f6; --chris-color: #f59e0b; }
-        body { background-color: #f8fafc; font-family: sans-serif; padding-bottom: 50px; }
-        .guild-header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 30px 0; margin-bottom: 30px; border-radius: 0 0 24px 24px; }
-        .section-title { font-weight: 700; color: #1e293b; margin-bottom: 20px; padding-left: 10px; border-left: 5px solid #6366f1; }
-        .card { border: none; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s; }
-        .event-bar { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 6px solid #1e293b; display: flex; align-items: center; justify-content: space-between; }
-        .member-header { padding: 12px; text-align: center; font-weight: 800; border-radius: 16px 16px 0 0; color: white; }
-        .bg-harry { background-color: var(--harry-color); } .bg-zoe { background-color: var(--zoe-color); }
-        .bg-ian { background-color: var(--ian-color); } .bg-chris { background-color: var(--chris-color); }
-        .task-box { border-bottom: 1px solid #e2e8f0; padding: 15px 10px; }
+        :root { --harry: #ef4444; --zoe: #10b981; --ian: #3b82f6; --chris: #f59e0b; }
+        body { background-color: #f1f5f9; font-family: -apple-system, sans-serif; padding-bottom: 50px; }
+        .guild-header { background: #1e293b; color: white; padding: 25px 0; margin-bottom: 30px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .section-title { font-weight: 700; color: #1e293b; margin: 30px 0 15px 0; border-left: 5px solid #6366f1; padding-left: 15px; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); height: 100%; transition: 0.2s; }
+        .card:hover { transform: translateY(-3px); }
+        .event-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 12px; border-left: 6px solid #1e293b; display: flex; justify-content: space-between; align-items: center; }
+        .member-header { padding: 12px; text-align: center; font-weight: 800; border-radius: 12px 12px 0 0; color: white; font-size: 1.2rem; }
+        .task-box { border-bottom: 1px solid #e2e8f0; padding: 15px 12px; }
         .task-box:last-child { border-bottom: none; }
-        .badge-aspect { font-size: 0.7rem; background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 6px; }
-        .deadline-text { color: #e11d48; font-weight: 600; font-size: 0.75rem; }
+        .badge-aspect { font-size: 0.65rem; background: #f1f5f9; color: #64748b; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; }
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
-        <div class="spinner-border text-primary"></div>
-        <p class="mt-3 fw-bold">正在讀取派克公會資料...</p>
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 fw-bold">正在讀取派克公會最新數據...</p>
     </div>
 
     <div class="container-fluid guild-header text-center">
-        <h1><i class="fas fa-crown text-warning"></i> 派克公會任務區</h1>
+        <h2 class="mb-0"><i class="fas fa-shield-halved text-warning"></i> 派克公會任務看板</h2>
+        <small class="text-white-50">即時數據同步中</small>
     </div>
 
     <div class="container">
-        <h3 class="section-title"><i class="fas fa-users-cog text-primary"></i> 成員工作細節</h3>
-        <div class="row g-4">
-            <div class="col-12 col-md-6 col-lg-3"><div class="card"><div class="member-header bg-harry">Harry</div><div class="card-body p-2" id="tasks-harry"></div></div></div>
-            <div class="col-12 col-md-6 col-lg-3"><div class="card"><div class="member-header bg-zoe">Zoe</div><div class="card-body p-2" id="tasks-zoe"></div></div></div>
-            <div class="col-12 col-md-6 col-lg-3"><div class="card"><div class="member-header bg-ian">Ian</div><div class="card-body p-2" id="tasks-ian"></div></div></div>
-            <div class="col-12 col-md-6 col-lg-3"><div class="card"><div class="member-header bg-chris">Chris</div><div class="card-body p-2" id="tasks-chris"></div></div></div>
+        <h4 class="section-title"><i class="fas fa-calendar-check text-danger"></i> 關鍵活動 (未來 90 日)</h4>
+        <div id="event-area" class="row g-2 mb-4">
+            </div>
+
+        <h4 class="section-title"><i class="fas fa-bolt text-primary"></i> 成員目前任務</h4>
+        <div class="row g-3">
+            <div class="col-12 col-md-6 col-lg-3"><div class="card"><div class="member-header" style="background:var(--harry)">Harry</div><div id="tasks-harry"></div></div></div>
+            <div class="col-12 col-md-6 col-lg-3"><div class="card"><div class="member-header" style="background:var(--zoe)">Zoe</div><div id="tasks-zoe"></div></div></div>
+            <div class="col-12 col-md-6 col-lg-3"><div class="card"><div class="member-header" style="background:var(--ian)">Ian</div><div id="tasks-ian"></div></div></div>
+            <div class="col-12 col-md-6 col-lg-3"><div class="card"><div class="member-header" style="background:var(--chris)">Chris</div><div id="tasks-chris"></div></div></div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script>
-        // 這裡直接使用你提供的發布連結
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSLnU0BMgl4AFXJuTVBtdmcCvuhDbv7TJxLHGK0BQZ9pJTOxdcLQ2QU1inCjXeZKJdc9v3-y4Kfk4aS/pub?output=csv';
+        const URL_TASKS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSLnU0BMgl4AFXJuTVBtdmcCvuhDbv7TJxLHGK0BQZ9pJTOxdcLQ2QU1inCjXeZKJdc9v3-y4Kfk4aS/pub?output=csv';
+        const URL_EVENTS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSLnU0BMgl4AFXJuTVBtdmcCvuhDbv7TJxLHGK0BQZ9pJTOxdcLQ2QU1inCjXeZKJdc9v3-y4Kfk4aS/pub?gid=1185871089&single=true&output=csv';
 
         async function init() {
             try {
-                Papa.parse(CSV_URL, {
-                    download: true,
-                    header: true,
-                    complete: function(results) {
-                        console.log("Data loaded:", results.data);
-                        renderTasks(results.data);
-                        document.getElementById('loading-overlay').style.display = 'none';
-                    },
-                    error: function(err) {
-                        document.getElementById('loading-overlay').innerHTML = "讀取失敗，請確認試算表已發布";
-                    }
-                });
+                const [tasks, events] = await Promise.all([
+                    fetchData(URL_TASKS),
+                    fetchData(URL_EVENTS)
+                ]);
+
+                renderEvents(events);
+                renderTasks(tasks);
+                document.getElementById('loading-overlay').style.display = 'none';
             } catch (e) {
-                console.error(e);
+                console.error("Error loading data:", e);
+                document.getElementById('loading-overlay').innerHTML = `<div class="text-danger">數據載入錯誤，請檢查發布連結。</div>`;
             }
+        }
+
+        function fetchData(url) {
+            return new Promise((res, rej) => {
+                Papa.parse(url, { download: true, header: true, skipEmptyLines: true, complete: r => res(r.data), error: rej });
+            });
+        }
+
+        function parseChineseDate(s) {
+            if(!s) return null;
+            const clean = s.replace(/年|月/g, '/').replace(/日/g, '').trim();
+            const d = new Date(clean);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function renderEvents(data) {
+            const container = document.getElementById('event-area');
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const limit = new Date();
+            limit.setDate(today.getDate() + 90);
+
+            const filtered = data.filter(row => {
+                const d = parseChineseDate(row['日期']);
+                return d && d >= today && d <= limit;
+            }).sort((a,b) => parseChineseDate(a['日期']) - parseChineseDate(b['日期']));
+
+            if (!filtered.length) {
+                container.innerHTML = '<div class="col-12 text-muted px-3">近期無關鍵活動</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(e => {
+                const d = parseChineseDate(e['日期']);
+                const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+                const badgeClass = diff <= 7 ? 'bg-danger' : 'bg-warning text-dark';
+                return `
+                    <div class="col-12 col-md-6">
+                        <div class="event-card shadow-sm">
+                            <div>
+                                <div class="fw-bold text-dark" style="font-size:1.1rem">${e['Event']}</div>
+                                <small class="text-muted"><i class="far fa-calendar"></i> ${e['日期']}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge ${badgeClass} rounded-pill px-3 py-2">
+                                    ${diff === 0 ? '今天' : '倒數 ' + diff + ' 天'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderTasks(data) {
             const members = ['Harry', 'Zoe', 'Ian', 'Chris'];
             members.forEach(m => {
                 const container = document.getElementById(`tasks-${m.toLowerCase()}`);
+                const myTasks = data.filter(row => (row['負責人']||'').includes(m) && !(row['完成日期']||'').trim());
                 
-                // 篩選邏輯：負責人包含名字，且完成日期為空
-                const myTasks = data.filter(row => {
-                    const owner = row['負責人'] || '';
-                    const done = row['完成日期'] || '';
-                    return owner.includes(m) && done.trim() === '';
-                });
-
-                if(myTasks.length === 0) {
-                    container.innerHTML = '<p class="text-center text-muted my-4">目前無任務</p>';
+                if (!myTasks.length) {
+                    container.innerHTML = '<p class="text-center text-muted p-5" style="font-size:0.9rem">☕ 目前沒有任務</p>';
                     return;
                 }
 
                 container.innerHTML = myTasks.map(t => `
                     <div class="task-box">
-                        <div class="d-flex justify-content-between mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="badge-aspect">${t['Aspect'] || '一般'}</span>
-                            <span class="fw-bold text-primary">${t['進度'] || '0%'}</span>
+                            <span class="fw-bold text-primary" style="font-size:0.9rem">${t['進度'] || '0%'}</span>
                         </div>
-                        <div class="fw-bold mb-2">${t['Task']}</div>
-                        <div class="deadline-text">
-                            <i class="far fa-clock"></i> 期限: ${t['Deadline'] || '--'}
+                        <div class="fw-bold text-dark mb-2" style="font-size:0.95rem; line-height:1.4;">${t['Task']}</div>
+                        <div class="text-danger fw-bold" style="font-size:0.75rem">
+                            <i class="far fa-hourglass-half me-1"></i>${t['Deadline'] || '--'}
                         </div>
                     </div>
                 `).join('');
