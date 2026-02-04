@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>派克公會任務看板</title>
+    <title>派克公會任務看板 - 互動版</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -12,25 +12,21 @@
         .guild-header { background: #1e293b; color: white; padding: 20px 0; margin-bottom: 25px; border-radius: 0 0 20px 20px; }
         .section-title { font-weight: 700; color: #1e293b; margin: 25px 0 15px 0; border-left: 5px solid #6366f1; padding-left: 15px; }
         
-        /* 大卡片（成員） */
-        .member-column { background: #f1f5f9; border-radius: 16px; padding: 10px; height: 100%; border: 1px solid #e2e8f0; }
-        .member-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; margin-bottom: 10px; border-radius: 12px; color: white; font-weight: 800; }
-        .btn-edit { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.5); padding: 2px 8px; border-radius: 4px; }
-        .btn-edit:hover { color: white; background: rgba(255,255,255,0.2); }
+        /* 佈局 */
+        .member-column { background: #f1f5f9; border-radius: 16px; padding: 12px; height: 100%; border: 1px solid #e2e8f0; }
+        .member-header { padding: 12px; text-align: center; margin-bottom: 12px; border-radius: 12px; color: white; font-weight: 800; font-size: 1.2rem; }
 
-        /* 小卡片（任務） */
-        .task-card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: transform 0.2s; }
-        .task-card:hover { transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .task-title { font-size: 0.95rem; font-weight: 600; color: #334155; margin-bottom: 8px; line-height: 1.4; }
+        /* 小卡片樣式 */
+        .task-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: 0.2s; position: relative; }
+        .task-title { font-size: 1rem; font-weight: 600; color: #334155; margin-bottom: 10px; line-height: 1.4; }
         .task-meta { font-size: 0.75rem; color: #64748b; margin-bottom: 10px; display: flex; justify-content: space-between; }
         
-        /* 下拉選單樣式 */
-        .status-select { font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; background-color: #f8fafc; width: 100%; font-weight: 600; cursor: pointer; }
-        .status-waiting { border-left: 4px solid #94a3b8; }
-        .status-working { border-left: 4px solid #3b82f6; color: #1d4ed8; }
-        .status-finished { border-left: 4px solid #10b981; color: #047857; }
+        /* 下拉選單 */
+        .status-select { font-size: 0.85rem; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; width: 100%; cursor: pointer; background-color: #fff; }
+        .syncing { opacity: 0.5; pointer-events: none; }
+        .sync-loader { font-size: 0.7rem; color: #6366f1; display: none; margin-top: 5px; text-align: right; }
 
-        .event-item { background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 6px solid #1e293b; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .event-item { background: white; border-radius: 12px; padding: 12px 20px; margin-bottom: 10px; border-left: 6px solid #1e293b; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
     </style>
 </head>
@@ -51,42 +47,10 @@
 
         <h4 class="section-title"><i class="fas fa-th-large text-primary"></i> 任務看板</h4>
         <div class="row g-3">
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="member-column">
-                    <div class="member-header" style="background:var(--harry)">
-                        <span>Harry</span>
-                        <a href="https://docs.google.com/spreadsheets/d/1X5Xp6z39P6L9m..." target="_blank" class="btn-edit">編輯表單</a>
-                    </div>
-                    <div id="tasks-harry"></div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="member-column">
-                    <div class="member-header" style="background:var(--zoe)">
-                        <span>Zoe</span>
-                        <a href="#" target="_blank" class="btn-edit">編輯表單</a>
-                    </div>
-                    <div id="tasks-zoe"></div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="member-column">
-                    <div class="member-header" style="background:var(--ian)">
-                        <span>Ian</span>
-                        <a href="#" target="_blank" class="btn-edit">編輯表單</a>
-                    </div>
-                    <div id="tasks-ian"></div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="member-column">
-                    <div class="member-header" style="background:var(--chris)">
-                        <span>Chris</span>
-                        <a href="#" target="_blank" class="btn-edit">編輯表單</a>
-                    </div>
-                    <div id="tasks-chris"></div>
-                </div>
-            </div>
+            <div class="col-12 col-md-6 col-lg-3"><div class="member-column"><div class="member-header" style="background:var(--harry)">Harry</div><div id="tasks-harry"></div></div></div>
+            <div class="col-12 col-md-6 col-lg-3"><div class="member-column"><div class="member-header" style="background:var(--zoe)">Zoe</div><div id="tasks-zoe"></div></div></div>
+            <div class="col-12 col-md-6 col-lg-3"><div class="member-column"><div class="member-header" style="background:var(--ian)">Ian</div><div id="tasks-ian"></div></div></div>
+            <div class="col-12 col-md-6 col-lg-3"><div class="member-column"><div class="member-header" style="background:var(--chris)">Chris</div><div id="tasks-chris"></div></div></div>
         </div>
     </div>
 
@@ -94,6 +58,7 @@
     <script>
         const URL_TASKS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSLnU0BMgl4AFXJuTVBtdmcCvuhDbv7TJxLHGK0BQZ9pJTOxdcLQ2QU1inCjXeZKJdc9v3-y4Kfk4aS/pub?output=csv';
         const URL_EVENTS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSLnU0BMgl4AFXJuTVBtdmcCvuhDbv7TJxLHGK0BQZ9pJTOxdcLQ2QU1inCjXeZKJdc9v3-y4Kfk4aS/pub?gid=1185871089&single=true&output=csv';
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyt0NrPGTDgXwMMnzWYnJrOM6XvoMVryZfBXdupggT1QR13BtG3UJb1TD4wWU_P_QA/exec';
 
         async function init() {
             try {
@@ -113,23 +78,52 @@
             });
         }
 
+        // --- 自動同步功能 ---
+        async function updateStatus(taskName, newStatus, selectElement) {
+            const card = selectElement.closest('.task-card');
+            const loader = card.querySelector('.sync-loader');
+            
+            // UI 狀態更新
+            card.classList.add('syncing');
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch(GAS_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // 重要：解決跨網域問題
+                    cache: 'no-cache',
+                    body: JSON.stringify({ task: taskName, status: newStatus })
+                });
+
+                // 模擬延遲以便看到同步動畫
+                setTimeout(() => {
+                    card.classList.remove('syncing');
+                    loader.innerHTML = '<i class="fas fa-check"></i> 已同步到 Sheet';
+                    setTimeout(() => { loader.style.display = 'none'; loader.innerHTML = '同步中...'; }, 2000);
+                }, 800);
+
+            } catch (error) {
+                alert('同步失敗，請檢查網路連接');
+                card.classList.remove('syncing');
+            }
+        }
+
         function renderEvents(data) {
             const container = document.getElementById('event-area');
             const today = new Date(); today.setHours(0,0,0,0);
-            
             const filtered = data.filter(row => {
-                const d = new Date(row['日期'].replace(/年|月/g, '/').replace(/日/g, ''));
+                const d = new Date(row['日期']?.replace(/年|月/g, '/').replace(/日/g, ''));
                 return d >= today;
-            }).sort((a,b) => new Date(a['日期'].replace(/年|月/g, '/').replace(/日/g, '')) - new Date(b['日期'].replace(/年|月/g, '/').replace(/日/g, '')));
+            });
 
             container.innerHTML = filtered.map(e => `
                 <div class="col-12 col-md-6">
                     <div class="event-item">
                         <div><div class="fw-bold">${e['Event']}</div><small class="text-muted">${e['日期']}</small></div>
-                        <span class="badge bg-dark rounded-pill">Event</span>
+                        <span class="badge bg-dark rounded-pill">關鍵</span>
                     </div>
                 </div>
-            `).join('');
+            `).join('') || '<p class="text-muted px-3">無近期活動</p>';
         }
 
         function renderTasks(data) {
@@ -139,12 +133,10 @@
                 const myTasks = data.filter(row => (row['負責人']||'').includes(m) && !(row['完成日期']||'').trim());
                 
                 container.innerHTML = myTasks.map(t => {
-                    // 根據進度百分比決定初始下拉狀態（模擬）
-                    const progress = parseInt(t['進度']) || 0;
-                    let statusClass = 'status-waiting';
+                    const progress = t['進度'] || '0%';
                     let selected = 'Waiting to start';
-                    if(progress > 0 && progress < 100) { statusClass = 'status-working'; selected = 'Working'; }
-                    if(progress === 100) { statusClass = 'status-finished'; selected = 'Finished'; }
+                    if(progress === '100%') selected = 'Finished';
+                    else if(progress !== '0%') selected = 'Working';
 
                     return `
                         <div class="task-card">
@@ -153,11 +145,12 @@
                                 <span class="fw-bold text-danger">${t['Deadline'] || '--'}</span>
                             </div>
                             <div class="task-title">${t['Task']}</div>
-                            <select class="status-select ${statusClass}" onchange="this.className='status-select ' + (this.value=='Working'?'status-working':(this.value=='Finished'?'status-finished':'status-waiting'))">
+                            <select class="status-select" onchange="updateStatus('${t['Task']}', this.value, this)">
                                 <option value="Waiting to start" ${selected=='Waiting to start'?'selected':''}>⏳ Waiting to start</option>
-                                <option value="Working" ${selected=='Working'?'selected':''}>🚀 Working (${t['進度']||'0%'})</option>
+                                <option value="Working" ${selected=='Working'?'selected':''}>🚀 Working (${progress})</option>
                                 <option value="Finished" ${selected=='Finished'?'selected':''}>✅ Finished</option>
                             </select>
+                            <div class="sync-loader">同步中...</div>
                         </div>
                     `;
                 }).join('') || '<p class="text-center text-muted p-4">☕ 暫無任務</p>';
