@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>派克公會任務區</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --harry-color: #ef4444;
+            --zoe-color: #10b981;
+            --ian-color: #3b82f6;
+            --chris-color: #f59e0b;
+        }
+        body {
+            background-color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding-bottom: 50px;
+        }
+        .guild-header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 0 0 24px 24px;
+        }
+        .section-title {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 5px solid #6366f1;
+        }
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            height: 100%;
+            transition: transform 0.2s ease;
+        }
+        .card:hover { transform: translateY(-2px); }
+        
+        /* 活動卡片特有樣式 */
+        .event-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 6px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 成員標題顏色 */
+        .header-harry { background-color: var(--harry-color); color: white; }
+        .header-zoe   { background-color: var(--zoe-color); color: white; }
+        .header-ian   { background-color: var(--ian-color); color: white; }
+        .header-chris { background-color: var(--chris-color); color: white; }
+
+        .member-header {
+            padding: 12px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.25rem;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .task-box {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 15px 10px;
+        }
+        .task-box:last-child { border-bottom: none; }
+        
+        .badge-aspect {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #f1f5f9;
+            color: #475569;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .progress-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #6366f1;
+        }
+        .date-info {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+        .deadline-text { color: #e11d48; font-weight: 600; }
+
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 fw-bold">正在同步公會任務資料...</p>
+    </div>
+
+    <div class="container-fluid guild-header text-center">
+        <h1><i class="fas fa-crown text-warning"></i> 派克公會任務區</h1>
+        <p class="mb-0 text-white-50">教育戰隊即時進度看板</p>
+    </div>
+
+    <div class="container">
+        <h3 class="section-title"><i class="fas fa-bullhorn text-danger"></i> 近期主要活動 (90日)</h3>
+        <div id="events-list" class="mb-5">
+            </div>
+
+        <h3 class="section-title"><i class="fas fa-users-cog text-primary"></i> 成員工作細節</h3>
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card">
+                    <div class="member-header header-harry">Harry</div>
+                    <div class="card-body p-2" id="tasks-harry"></div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card">
+                    <div class="member-header header-zoe">Zoe</div>
+                    <div class="card-body p-2" id="tasks-zoe"></div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card">
+                    <div class="member-header header-ian">Ian</div>
+                    <div class="card-body p-2" id="tasks-ian"></div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="card">
+                    <div class="member-header header-chris">Chris</div>
+                    <div class="card-body p-2" id="tasks-chris"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script>
+        const SHEET_ID = '1ZHh0QJAFQ3hpmnM_FtN3YLvwV1_Qj7O6Uuv2kiy1m_Y';
+        const GID_TASKS = '0';
+        const GID_EVENTS = '1185871089'; // 已更新為你提供的 ID
+
+        const urlTasks = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID_TASKS}`;
+        const urlEvents = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID_EVENTS}`;
+
+        // 解析日期格式：2026年2月4日
+        function parseDate(s) {
+            if(!s) return null;
+            const clean = s.replace(/年/g, '/').replace(/月/g, '/').replace(/日/g, '').trim();
+            const d = new Date(clean);
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        async function init() {
+            try {
+                const [tasksRes, eventsRes] = await Promise.all([
+                    new Promise(res => Papa.parse(urlTasks, {download: true, header: true, complete: res})),
+                    new Promise(res => Papa.parse(urlEvents, {download: true, header: true, complete: res}))
+                ]);
+
+                renderEvents(eventsRes.data);
+                renderTasks(tasksRes.data);
+                document.getElementById('loading-overlay').style.display = 'none';
+            } catch (e) {
+                alert("讀取失敗，請確認 Google Sheet 是否已「發布到網絡」。");
+            }
+        }
+
+        function renderEvents(data) {
+            const container = document.getElementById('events-list');
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const limit = new Date();
+            limit.setDate(today.getDate() + 90);
+
+            const filtered = data.filter(row => {
+                const d = parseDate(row['日期']);
+                return d && d >= today && d <= limit;
+            }).sort((a,b) => parseDate(a['日期']) - parseDate(b['日期']));
+
+            if(filtered.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">近期無主要活動</p>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(evt => {
+                const d = parseDate(evt['日期']);
+                const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+                let badgeColor = diff <= 7 ? 'bg-danger' : 'bg-dark';
+                return `
+                    <div class="event-bar shadow-sm">
+                        <div>
+                            <span class="fw-bold fs-5">${evt['Event']}</span>
+                            <div class="text-muted small"><i class="far fa-calendar-alt"></i> ${evt['日期']}</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge ${badgeColor} rounded-pill px-3 py-2">
+                                ${diff === 0 ? '今天' : '倒數 ' + diff + ' 天'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTasks(data) {
+            const members = ['Harry', 'Zoe', 'Ian', 'Chris'];
+            members.forEach(m => {
+                const container = document.getElementById(`tasks-${m.toLowerCase()}`);
+                const myTasks = data.filter(row => {
+                    const owner = row['負責人'] || '';
+                    const done = row['完成日期'] || '';
+                    return owner.includes(m) && done.trim() === '';
+                });
+
+                if(myTasks.length === 0) {
+                    container.innerHTML = '<p class="text-center text-muted my-4">暫無任務</p>';
+                    return;
+                }
+
+                container.innerHTML = myTasks.map(t => `
+                    <div class="task-box">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge-aspect">${t['Aspect']}</span>
+                            <span class="progress-label">${t['進度']}</span>
+                        </div>
+                        <div class="fw-bold" style="font-size: 1rem; color: #334155;">${t['Task']}</div>
+                        <div class="date-info">
+                            <div><i class="fas fa-plus-circle"></i> 建立: ${t['建立日期']}</div>
+                            <div class="deadline-text"><i class="fas fa-hourglass-half"></i> 期限: ${t['Deadline']}</div>
+                        </div>
+                    </div>
+                `).join('');
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
